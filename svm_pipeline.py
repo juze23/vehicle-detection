@@ -50,7 +50,7 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block,
                                   pixels_per_cell=(pix_per_cell, pix_per_cell),
                                   cells_per_block=(cell_per_block, cell_per_block),
                                   transform_sqrt=True,
-                                  visualise=vis, feature_vector=feature_vec)
+                                  visualize=vis, feature_vector=feature_vec)
         return features, hog_image
     # Otherwise call with one output
     else:
@@ -58,7 +58,7 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block,
                        pixels_per_cell=(pix_per_cell, pix_per_cell),
                        cells_per_block=(cell_per_block, cell_per_block),
                        transform_sqrt=True,
-                       visualise=vis, feature_vector=feature_vec)
+                       visualize=vis, feature_vector=feature_vec)
         return features
 
 
@@ -96,6 +96,7 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
 
         # png is scale from (0,1)
         image = mpimg.imread(file)
+        print("Loaded image:", file, "Shape:", image.shape)
 
         # apply color conversion if other than 'RGB'
         if color_space != 'RGB':
@@ -153,13 +154,13 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
     xspan = x_start_stop[1] - x_start_stop[0]
     yspan = y_start_stop[1] - y_start_stop[0]
     # Compute the number of pixels per step in x/y
-    nx_pix_per_step = np.int(xy_window[0]*(1 - xy_overlap[0]))
-    ny_pix_per_step = np.int(xy_window[1]*(1 - xy_overlap[1]))
+    nx_pix_per_step = int(xy_window[0]*(1 - xy_overlap[0]))
+    ny_pix_per_step = int(xy_window[1]*(1 - xy_overlap[1]))
     # Compute the number of windows in x/y
-    nx_buffer = np.int(xy_window[0]*(xy_overlap[0]))
-    ny_buffer = np.int(xy_window[1]*(xy_overlap[1]))
-    nx_windows = np.int((xspan-nx_buffer)/nx_pix_per_step)
-    ny_windows = np.int((yspan-ny_buffer)/ny_pix_per_step)
+    nx_buffer = int(xy_window[0]*(xy_overlap[0]))
+    ny_buffer = int(xy_window[1]*(xy_overlap[1]))
+    nx_windows = int((xspan-nx_buffer)/nx_pix_per_step)
+    ny_windows = int((yspan-ny_buffer)/ny_pix_per_step)
     # Initialize a list to append window positions to
     window_list = []
     for ys in range(ny_windows):
@@ -297,7 +298,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
 
     if scale != 1:
         imshape = ctrans_tosearch.shape
-        ctrans_tosearch = cv2.resize(ctrans_tosearch, (np.int(imshape[1]/scale), np.int(imshape[0]/scale)))
+        ctrans_tosearch = cv2.resize(ctrans_tosearch, (int(imshape[1]/scale), int(imshape[0]/scale)))
 
     ch1 = ctrans_tosearch[:,:,0]
     ch2 = ctrans_tosearch[:,:,1]
@@ -359,9 +360,9 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
             test_prediction = svc.predict(test_features)
 
             if test_prediction == 1:
-                xbox_left = np.int(xleft*scale)
-                ytop_draw = np.int(ytop*scale)
-                win_draw = np.int(window*scale)
+                xbox_left = int(xleft*scale)
+                ytop_draw = int(ytop*scale)
+                win_draw = int(window*scale)
                 # cv2.rectangle(draw_img,(xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart),(0,0,255),6)
                 on_windows.append(((xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart)))
 
@@ -428,7 +429,7 @@ def draw_bboxes(img, heatmap_buffer, heatmap_pre, N_buffer):
 
 def generate_heatmap(image, windows_list):
 
-    heat = np.zeros_like(image[:,:,0]).astype(np.float)
+    heat = np.zeros_like(image[:,:,0]).astype(float)
 
     # Add heat to each box in box list
     heat = add_heat(heat, windows_list)
@@ -456,6 +457,7 @@ def get_fileNames(rootdir):
                 continue
             else:
                 data.append(path.join(root, name))
+    print("Number of car images found:", len(data))
     return data
 
 
@@ -477,8 +479,8 @@ if path.isfile(clf_path):
 else:
     # Read in cars and notcars
     # images = glob.glob('data/small/all/*.jpeg')
-    car_path = '/data/udacity/p5/vehicles'
-    notcars_path = '/data/udacity/p5/non-vehicles'
+    car_path = 'data/udacity/p5/vehicles'
+    notcars_path = 'data/udacity/p5/non-vehicles'
     cars = get_fileNames(car_path)
     notcars = get_fileNames(notcars_path)
 
@@ -497,6 +499,7 @@ else:
                             hog_channel=hog_channel, spatial_feat=spatial_feat,
                             hist_feat=hist_feat, hog_feat=hog_feat)
     print('car features extracted!')
+    print("Car feature vector length:", len(car_features[0]) if car_features else 0)
     print('extracting noncar features...')
     notcar_features = extract_features(notcars, color_space=color_space,
                             spatial_size=spatial_size, hist_bins=hist_bins,
@@ -505,6 +508,7 @@ else:
                             hog_channel=hog_channel, spatial_feat=spatial_feat,
                             hist_feat=hist_feat, hog_feat=hog_feat)
     print('noncar features extracted!')
+    print("Noncar feature vector length:", len(notcar_features[0]) if notcar_features else 0)
 
     X = np.vstack((car_features, notcar_features)).astype(np.float64)
     # Fit a per-column scaler

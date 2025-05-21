@@ -1,4 +1,4 @@
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 from svm_pipeline import *
 from yolo_pipeline import *
 from lane import *
